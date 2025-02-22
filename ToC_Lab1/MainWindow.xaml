@@ -64,7 +64,9 @@
                     <MenuItem Header="Список литературы"/>
                     <MenuItem Header="Исходный код программы"/>
                 </MenuItem>
-                <MenuItem Header="Пуск"/>
+                <MenuItem Header="Пуск">
+                    <MenuItem Header="Поиск фамилии" Click="FindFIO"/>
+                </MenuItem>
                 <MenuItem Header="Справка">
                     <MenuItem Header="Вызов справки" Click="ShowHelp"/>
                     <MenuItem Header="О программе" Click="AboutApp"/>

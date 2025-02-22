@@ -1,6 +1,7 @@
 ﻿using Microsoft.Win32;
 using System.IO;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -295,9 +296,39 @@ namespace ToC_Lab1
         }
 
 
+        // Метод для поиска ФИО в тексте
+        private void FindFIO(object sender, RoutedEventArgs e)
+        {
+            // Получаем текст из TextEditor
+            string inputText = TextEditor.Text;
+
+            // Регулярное выражение для поиска ФИО (фамилия и инициалы)
+            string pattern = @"([А-ЯЁа-яё]+[-]?[А-ЯЁа-яё]+)\s?([А-ЯЁ]\.)?\s?([А-ЯЁ]\.)?";
+
+            // Создаем объект регулярного выражения
+            Regex regex = new Regex(pattern);
+
+            // Ищем все совпадения
+            MatchCollection matches = regex.Matches(inputText);
+
+            // Очистить поле ошибок
+            ErrorOutput.Clear();
+
+            // Выводим найденные ФИО в ErrorOutput
+            foreach (Match match in matches)
+            {
+                // Каждый найденный результат выводим в ErrorOutput
+                ErrorOutput.AppendText(match.Value + Environment.NewLine);
+            }
+
+            // Если ничего не найдено, показываем сообщение
+            if (matches.Count == 0)
+            {
+                ErrorOutput.AppendText("Не найдено совпадений!" + Environment.NewLine);
+            }
+        }
 
     }
-
     // Классы для хранения стека операций Undo и Redo
     public class UndoStack
     {
@@ -342,7 +373,4 @@ namespace ToC_Lab1
 
         public int Count => _stack.Count;
     }
-
-
-
 }
