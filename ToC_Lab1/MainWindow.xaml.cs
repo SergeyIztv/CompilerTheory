@@ -29,7 +29,7 @@ namespace ToC_Lab1
 
             // Устанавливаем обработчик события изменения текста
             TextEditor.PreviewKeyDown += TextEditor_PreviewKeyDown;
-            this.PreviewKeyDown += MainWindow_PreviewKeyDown; // Добавляем обработчик для Ctrl+Z, Ctrl+Y
+            //this.PreviewKeyDown += MainWindow_PreviewKeyDown; // Добавляем обработчик для Ctrl+Z, Ctrl+Y
         }
 
         // Обработчик нажатия клавиш
@@ -44,25 +44,25 @@ namespace ToC_Lab1
             }
         }
 
-        // Обработчик для горячих клавиш Ctrl+Z, Ctrl+Y, Ctrl+V
-        private void MainWindow_PreviewKeyDown(object sender, KeyEventArgs e)
-        {
-            if (Keyboard.Modifiers == ModifierKeys.Control)
-            {
-                if (e.Key == Key.Z) // Ctrl+Z (Undo)
-                {
-                    UndoText(sender, e);
-                }
-                else if (e.Key == Key.Y) // Ctrl+Y (Redo)
-                {
-                    RedoText(sender, e);
-                }
-                else if (e.Key == Key.V) // Ctrl+V (Paste)
-                {
-                    PasteText(sender, e);
-                }
-            }
-        }
+        //// Обработчик для горячих клавиш Ctrl+Z, Ctrl+Y, Ctrl+V
+        //private void MainWindow_PreviewKeyDown(object sender, KeyEventArgs e)
+        //{
+        //    if (Keyboard.Modifiers == ModifierKeys.Control)
+        //    {
+        //        if (e.Key == Key.Z) // Ctrl+Z (Undo)
+        //        {
+        //            UndoText(sender, e);
+        //        }
+        //        else if (e.Key == Key.Y) // Ctrl+Y (Redo)
+        //        {
+        //            RedoText(sender, e);
+        //        }
+        //        else if (e.Key == Key.V) // Ctrl+V (Paste)
+        //        {
+        //            PasteText(sender, e);
+        //        }
+        //    }
+        //}
 
         private void NewFile(object sender, RoutedEventArgs e)
         {
@@ -238,10 +238,10 @@ namespace ToC_Lab1
 
         private void ShowHelp(object sender, RoutedEventArgs e)
         {
-            // Указываем путь к файлу справки (предположим, что он находится в папке "Help")
+            
             string helpFilePath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Help.html");
 
-            // Открываем справку в браузере по умолчанию
+            
             System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(helpFilePath) { UseShellExecute = true });
         }
 
@@ -295,6 +295,14 @@ namespace ToC_Lab1
             LineNumbers.Text = lineNumbers.ToString();
         }
 
+        private void ClearAll(object sender, RoutedEventArgs e)
+        {
+            undoStack.Push(TextEditor.Text);
+            redoStack.Clear();
+
+            TextEditor.Clear();
+            ErrorOutput.Clear();
+        }
 
         // Метод для поиска ФИО в тексте
         private void FindFIO(object sender, RoutedEventArgs e)
@@ -303,32 +311,103 @@ namespace ToC_Lab1
             string inputText = TextEditor.Text;
 
             // Регулярное выражение для поиска ФИО (фамилия и инициалы)
-            string pattern = @"([А-ЯЁа-яё]+[-]?[А-ЯЁа-яё]+)\s?([А-ЯЁ]\.)?\s?([А-ЯЁ]\.)?";
+            string pattern = @"\b([А-ЯЁ][а-яё]{1,}(?:-[А-ЯЁ][а-яё]{1,})?(?:ов|ова|ин|ина|ий|ая|ой)\b)\s*[А-ЯЁ]\.\s*[А-ЯЁ]\.|\b[А-ЯЁ]\.\s*[А-ЯЁ]\.\s*([А-ЯЁ][а-яё]{1,}(?:-[А-ЯЁ][а-яё]{1,})?(?:ов|ова|ин|ина|ий|ая|ой))\b";
 
-            // Создаем объект регулярного выражения
             Regex regex = new Regex(pattern);
-
-            // Ищем все совпадения
             MatchCollection matches = regex.Matches(inputText);
 
-            // Очистить поле ошибок
+            // Очищаем ErrorOutput перед выводом новых данных
             ErrorOutput.Clear();
 
-            // Выводим найденные ФИО в ErrorOutput
-            foreach (Match match in matches)
+            // Если найдены совпадения, выводим их
+            if (matches.Count > 0)
             {
-                // Каждый найденный результат выводим в ErrorOutput
-                ErrorOutput.AppendText(match.Value + Environment.NewLine);
-            }
+                // Разделяем текст на строки
+                string[] lines = inputText.Split('\n');
 
-            // Если ничего не найдено, показываем сообщение
-            if (matches.Count == 0)
+                // Создаем StringBuilder для формирования результата
+                StringBuilder result = new StringBuilder();
+
+                foreach (Match match in matches)
+                {
+                    // Находим номер строки и позицию в строке
+                    int lineNumber = 1;
+                    int positionInLine = match.Index;
+                    int currentLength = 0;
+
+                    for (int i = 0; i < lines.Length; i++)
+                    {
+                        if (currentLength + lines[i].Length + 1 > match.Index) // +1 для учета символа новой строки
+                        {
+                            lineNumber = i + 1;
+                            positionInLine = match.Index - currentLength;
+                            break;
+                        }
+                        currentLength += lines[i].Length + 1; // +1 для учета символа новой строки
+                    }
+
+                    // Формируем строку результата
+                    string matchInfo = $"Найдено: {match.Value} (Строка: {lineNumber}, Позиция: {positionInLine})";
+                    result.AppendLine(matchInfo);
+
+                    // Выводим результат в ErrorOutput
+                    ErrorOutput.AppendText(matchInfo + Environment.NewLine);
+                }
+
+                // Предлагаем пользователю сохранить результат в файл
+                SaveFileDialog saveFileDialog = new SaveFileDialog
+                {
+                    Filter = "Text Files (*.txt)|*.txt",
+                    DefaultExt = ".txt",
+                    Title = "Сохранить результаты поиска"
+                };
+
+                if (saveFileDialog.ShowDialog() == true)
+                {
+                    // Сохраняем результат в файл
+                    File.WriteAllText(saveFileDialog.FileName, result.ToString());
+                    MessageBox.Show("Результаты поиска успешно сохранены!", "Сохранение", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+            }
+            else
             {
+                // Если ничего не найдено, показываем сообщение
                 ErrorOutput.AppendText("Не найдено совпадений!" + Environment.NewLine);
             }
         }
 
+        //private void FindFIO(object sender, RoutedEventArgs e)
+        //{
+        //    // Получаем текст из TextEditor
+        //    string inputText = TextEditor.Text;
+
+        //    // Регулярное выражение для поиска ФИО (фамилия и инициалы)
+        //    string pattern = @"\b([А-ЯЁ][а-яё]{1,}(?:-[А-ЯЁ][а-яё]{1,})?(?:ов|ова|ин|ина|ий|ая|ой)\b)\s*[А-ЯЁ]\.\s*[А-ЯЁ]\.|\b[А-ЯЁ]\.\s*[А-ЯЁ]\.\s*([А-ЯЁ][а-яё]{1,}(?:-[А-ЯЁ][а-яё]{1,})?(?:ов|ова|ин|ина|ий|ая|ой))\b";
+
+        //    Regex regex = new Regex(pattern);
+        //    MatchCollection matches = regex.Matches(inputText);
+
+        //    // Очищаем ErrorOutput перед выводом новых данных
+        //    ErrorOutput.Clear();
+
+        //    // Если найдены совпадения, выводим их
+        //    if (matches.Count > 0)
+        //    {
+        //        foreach (Match match in matches)
+        //        {
+        //            ErrorOutput.AppendText(match.Value + Environment.NewLine); // Добавляем перенос строки
+        //        }
+        //    }
+        //    else
+        //    {
+        //        // Если ничего не найдено, показываем сообщение
+        //        ErrorOutput.AppendText("Не найдено совпадений!" + Environment.NewLine);
+        //    }
+        //}
+
     }
+
+
     // Классы для хранения стека операций Undo и Redo
     public class UndoStack
     {

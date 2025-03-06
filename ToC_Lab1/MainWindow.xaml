@@ -101,6 +101,10 @@
                 <Button Click="PasteText" ToolTip="Вставить">
                     <Image Source="/icons8-paste-50.png" Width="20" Height="20"/>
                 </Button>
+                <Separator/>
+                <Button Click="ClearAll" ToolTip="Очистить все">
+                    <Image Source="/icons8-clear-50.png" Width="20" Height="20"/>
+                </Button>
             </ToolBar>
 
             <!-- Основной контент -->

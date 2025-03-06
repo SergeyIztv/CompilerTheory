@@ -9,6 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="icons8-clear-50.png" />
     <None Remove="icons8-copy-50.png" />
     <None Remove="icons8-cut-50.png" />
     <None Remove="icons8-new-file-50.png" />
@@ -20,6 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Resource Include="icons8-clear-50.png" />
     <Resource Include="icons8-copy-50.png" />
     <Resource Include="icons8-cut-50.png" />
     <Resource Include="icons8-new-file-50.png" />
