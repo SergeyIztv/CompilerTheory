@@ -1,4 +1,5 @@
 ﻿using Microsoft.Win32;
+using System.ComponentModel;
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -14,19 +15,41 @@ using System.Windows.Shapes;
 
 namespace ToC_Lab1
 {
-    public partial class MainWindow : Window
+    public partial class MainWindow : Window, INotifyPropertyChanged
     {
         private string currentFilePath;
-        private UndoStack undoStack; // Для хранения отменённых операций
-        private RedoStack redoStack; // Для хранения повторённых операций
+        private UndoStack _undoStack;
+        private RedoStack _redoStack;
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+
+        public UndoStack UndoStack
+        {
+            get => _undoStack;
+            private set
+            {
+                _undoStack = value;
+                OnPropertyChanged(nameof(UndoStack));
+            }
+        }
+
+        public RedoStack RedoStack
+        {
+            get => _redoStack;
+            private set
+            {
+                _redoStack = value;
+                OnPropertyChanged(nameof(RedoStack));
+            }
+        }
 
         public MainWindow()
         {
             InitializeComponent();
             currentFilePath = string.Empty;
-            undoStack = new UndoStack();
-            redoStack = new RedoStack();
-
+            _undoStack = new UndoStack();
+            _redoStack = new RedoStack();
+            DataContext = this; 
             // Устанавливаем обработчик события изменения текста
             TextEditor.PreviewKeyDown += TextEditor_PreviewKeyDown;
             //this.PreviewKeyDown += MainWindow_PreviewKeyDown; // Добавляем обработчик для Ctrl+Z, Ctrl+Y
@@ -39,30 +62,10 @@ namespace ToC_Lab1
             if (e.Key == Key.Enter || e.Key == Key.Back || e.Key == Key.Tab || e.Key == Key.Space)
             {
                 // Добавляем текущее состояние текста в стек отмены
-                undoStack.Push(TextEditor.Text);
-                redoStack.Clear(); // Очищаем стек повторов при изменении текста
+                _undoStack.Push(TextEditor.Text);
+                _redoStack.Clear(); // Очищаем стек повторов при изменении текста
             }
         }
-
-        //// Обработчик для горячих клавиш Ctrl+Z, Ctrl+Y, Ctrl+V
-        //private void MainWindow_PreviewKeyDown(object sender, KeyEventArgs e)
-        //{
-        //    if (Keyboard.Modifiers == ModifierKeys.Control)
-        //    {
-        //        if (e.Key == Key.Z) // Ctrl+Z (Undo)
-        //        {
-        //            UndoText(sender, e);
-        //        }
-        //        else if (e.Key == Key.Y) // Ctrl+Y (Redo)
-        //        {
-        //            RedoText(sender, e);
-        //        }
-        //        else if (e.Key == Key.V) // Ctrl+V (Paste)
-        //        {
-        //            PasteText(sender, e);
-        //        }
-        //    }
-        //}
 
         private void NewFile(object sender, RoutedEventArgs e)
         {
@@ -88,8 +91,8 @@ namespace ToC_Lab1
             currentFilePath = string.Empty;
 
             // Очищаем стеки Undo и Redo
-            undoStack.Clear();
-            redoStack.Clear();
+            _undoStack.Clear();
+            _redoStack.Clear();
         }
 
         private void OpenFile(object sender, RoutedEventArgs e)
@@ -119,8 +122,8 @@ namespace ToC_Lab1
                 currentFilePath = openFileDialog.FileName;
 
                 // Очищаем стеки Undo и Redo
-                undoStack.Clear();
-                redoStack.Clear();
+                _undoStack.Clear();
+                _redoStack.Clear();
             }
         }
 
@@ -135,8 +138,8 @@ namespace ToC_Lab1
                 File.WriteAllText(currentFilePath, TextEditor.Text);
 
                 // Очищаем стеки Undo и Redo после сохранения
-                undoStack.Clear();
-                redoStack.Clear();
+                _undoStack.Clear();
+                _redoStack.Clear();
             }
         }
 
@@ -184,8 +187,8 @@ namespace ToC_Lab1
 
         private void CutText(object sender, RoutedEventArgs e)
         {
-            undoStack.Push(TextEditor.Text);
-            redoStack.Clear();
+            _undoStack.Push(TextEditor.Text);
+            _redoStack.Clear();
             TextEditor.Cut();
         }
 
@@ -196,15 +199,15 @@ namespace ToC_Lab1
 
         private void PasteText(object sender, RoutedEventArgs e)
         {
-            undoStack.Push(TextEditor.Text);
-            redoStack.Clear();
+            _undoStack.Push(TextEditor.Text);
+            _redoStack.Clear();
             TextEditor.Paste();
         }
 
         private void DeleteText(object sender, RoutedEventArgs e)
         {
-            undoStack.Push(TextEditor.Text);
-            redoStack.Clear();
+            _undoStack.Push(TextEditor.Text);
+            _redoStack.Clear();
             TextEditor.SelectedText = string.Empty;
         }
 
@@ -215,22 +218,22 @@ namespace ToC_Lab1
 
         private void UndoText(object sender, RoutedEventArgs e)
         {
-            if (undoStack.Count > 0)
+            if (_undoStack.Count > 0)
             {
                 int caretPos = TextEditor.CaretIndex; // Запоминаем позицию курсора
-                redoStack.Push(TextEditor.Text);
-                TextEditor.Text = undoStack.Pop();
+                _redoStack.Push(TextEditor.Text);
+                TextEditor.Text = _undoStack.Pop();
                 TextEditor.CaretIndex = Math.Min(caretPos, TextEditor.Text.Length); // Восстанавливаем позицию курсора
             }
         }
 
         private void RedoText(object sender, RoutedEventArgs e)
         {
-            if (redoStack.Count > 0)
+            if (_redoStack.Count > 0)
             {
                 int caretPos = TextEditor.CaretIndex; // Запоминаем позицию курсора
-                undoStack.Push(TextEditor.Text);
-                TextEditor.Text = redoStack.Pop();
+                _undoStack.Push(TextEditor.Text);
+                TextEditor.Text = _redoStack.Pop();
                 TextEditor.CaretIndex = Math.Min(caretPos, TextEditor.Text.Length); // Восстанавливаем позицию курсора
             }
         }
@@ -279,8 +282,11 @@ namespace ToC_Lab1
 
         private void UpdateLineNumbers()
         {
+            // Получаем текст из RichTextBox
+            string text = TextEditor.Text;
+
             // Разделяем текст по строкам
-            string[] lines = TextEditor.Text.Split('\n');
+            string[] lines = text.Split('\n');
 
             // Создаем строку для номеров строк
             StringBuilder lineNumbers = new StringBuilder();
@@ -297,8 +303,8 @@ namespace ToC_Lab1
 
         private void ClearAll(object sender, RoutedEventArgs e)
         {
-            undoStack.Push(TextEditor.Text);
-            redoStack.Clear();
+            _undoStack.Push(TextEditor.Text);
+            _redoStack.Clear();
 
             TextEditor.Clear();
             ErrorOutput.Clear();
@@ -376,80 +382,78 @@ namespace ToC_Lab1
             }
         }
 
-        //private void FindFIO(object sender, RoutedEventArgs e)
-        //{
-        //    // Получаем текст из TextEditor
-        //    string inputText = TextEditor.Text;
-
-        //    // Регулярное выражение для поиска ФИО (фамилия и инициалы)
-        //    string pattern = @"\b([А-ЯЁ][а-яё]{1,}(?:-[А-ЯЁ][а-яё]{1,})?(?:ов|ова|ин|ина|ий|ая|ой)\b)\s*[А-ЯЁ]\.\s*[А-ЯЁ]\.|\b[А-ЯЁ]\.\s*[А-ЯЁ]\.\s*([А-ЯЁ][а-яё]{1,}(?:-[А-ЯЁ][а-яё]{1,})?(?:ов|ова|ин|ина|ий|ая|ой))\b";
-
-        //    Regex regex = new Regex(pattern);
-        //    MatchCollection matches = regex.Matches(inputText);
-
-        //    // Очищаем ErrorOutput перед выводом новых данных
-        //    ErrorOutput.Clear();
-
-        //    // Если найдены совпадения, выводим их
-        //    if (matches.Count > 0)
-        //    {
-        //        foreach (Match match in matches)
-        //        {
-        //            ErrorOutput.AppendText(match.Value + Environment.NewLine); // Добавляем перенос строки
-        //        }
-        //    }
-        //    else
-        //    {
-        //        // Если ничего не найдено, показываем сообщение
-        //        ErrorOutput.AppendText("Не найдено совпадений!" + Environment.NewLine);
-        //    }
-        //}
+        protected void OnPropertyChanged(string propertyName)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
 
     }
 
 
     // Классы для хранения стека операций Undo и Redo
-    public class UndoStack
+    public class UndoStack : INotifyPropertyChanged
     {
         private readonly Stack<string> _stack = new Stack<string>();
+
+        public event PropertyChangedEventHandler PropertyChanged;
 
         public void Push(string text)
         {
             _stack.Push(text);
+            OnPropertyChanged(nameof(Count));
         }
 
         public string Pop()
         {
-            return _stack.Count > 0 ? _stack.Pop() : null;
+            var result = _stack.Count > 0 ? _stack.Pop() : null;
+            OnPropertyChanged(nameof(Count));
+            return result;
         }
 
         public void Clear()
         {
             _stack.Clear();
+            OnPropertyChanged(nameof(Count));
         }
 
         public int Count => _stack.Count;
+
+        protected void OnPropertyChanged(string propertyName)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
     }
 
-    public class RedoStack
+    public class RedoStack : INotifyPropertyChanged
     {
         private readonly Stack<string> _stack = new Stack<string>();
+
+        public event PropertyChangedEventHandler PropertyChanged;
 
         public void Push(string text)
         {
             _stack.Push(text);
+            OnPropertyChanged(nameof(Count));
         }
 
         public string Pop()
         {
-            return _stack.Count > 0 ? _stack.Pop() : null;
+            var result = _stack.Count > 0 ? _stack.Pop() : null;
+            OnPropertyChanged(nameof(Count));
+            return result;
         }
 
         public void Clear()
         {
             _stack.Clear();
+            OnPropertyChanged(nameof(Count));
         }
 
         public int Count => _stack.Count;
+
+        protected void OnPropertyChanged(string propertyName)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
     }
 }

@@ -7,6 +7,32 @@
         mc:Ignorable="d"
         WindowStyle="None"
         Title="Compiler" Height="450" Width="470" WindowStartupLocation="CenterScreen">
+
+    <Window.Resources>
+        <!-- Конвертер для IsEnabled -->
+        <local:GreaterThanZeroConverter x:Key="GreaterThanZeroConverter"/>
+
+        <!-- Стиль для изображения -->
+        <Style x:Key="GrayableImageStyle" TargetType="Image">
+            <Setter Property="Opacity" Value="1"/>
+            <!-- Обычная прозрачность -->
+            <Style.Triggers>
+                <!-- Когда родительский элемент (кнопка) отключен -->
+                <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=Button}, Path=IsEnabled}" Value="False">
+                    <Setter Property="Opacity" Value="0.3"/>
+                    <!-- Полупрозрачность -->
+                    <Setter Property="Effect">
+                        <Setter.Value>
+                            <!-- Эффект для обесцвечивания -->
+                            <DropShadowEffect Color="Gray" ShadowDepth="0" Opacity="1"/>
+                        </Setter.Value>
+                    </Setter>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
+
+
     <Grid>
         <!-- Панель заголовка с кнопками -->
         <Border Background="DarkGray" Height="30" VerticalAlignment="Top" MouseDown="MoveWindow">
@@ -89,11 +115,11 @@
                     <Image Source="/icons8-save-50.png" Width="20" Height="20"/>
                 </Button>
                 <Separator/>
-                <Button Click="UndoText" ToolTip="Отменить">
-                    <Image Source="/icons8-undo-48.png" Width="20" Height="20"/>
+                <Button Click="UndoText" ToolTip="Отменить" IsEnabled="{Binding UndoStack.Count, Converter={StaticResource GreaterThanZeroConverter}}">
+                    <Image Source="/icons8-undo-48.png" Width="20" Height="20" Style="{StaticResource GrayableImageStyle}"/>
                 </Button>
-                <Button Click="RedoText" ToolTip="Повторить">
-                    <Image Source="/icons8-redo-48.png" Width="20" Height="20"/>
+                <Button Click="RedoText" ToolTip="Повторить" IsEnabled="{Binding RedoStack.Count, Converter={StaticResource GreaterThanZeroConverter}}">
+                    <Image Source="/icons8-redo-48.png" Width="20" Height="20" Style="{StaticResource GrayableImageStyle}"/>
                 </Button>
                 <Separator/>
                 <Button Click="CutText" ToolTip="Вырезать">
@@ -124,7 +150,7 @@
                     <!-- Для текста -->
                 </Grid.ColumnDefinitions>
 
-                <ScrollViewer Grid.Row="0" Grid.Column="1">
+                <ScrollViewer HorizontalScrollBarVisibility="Auto" Grid.Row="0" Grid.Column="1">
                     <DockPanel>
                         <!-- Номера строк -->
                         <TextBox Name="LineNumbers" 
@@ -132,8 +158,8 @@
                                  Background="#DDD" 
                                  HorizontalAlignment="Left"
                                  TextAlignment="Right"
-                                 IsReadOnly="True">
-                        </TextBox>
+                                 IsReadOnly="True"/>
+
 
                         <!-- Поле для ввода текста -->
                         <TextBox Width="Auto" 
@@ -143,7 +169,9 @@
                                  VerticalScrollBarVisibility="Auto" 
                                  TextChanged="TextEditor_TextChanged"
                                  HorizontalAlignment="Stretch"/>
+                        
                     </DockPanel>
+                    
                 </ScrollViewer>
 
 
