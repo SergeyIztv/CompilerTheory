@@ -329,7 +329,7 @@ namespace ToC_Lab1
 
             // Регулярное выражение для поиска ФИО (фамилия и инициалы)
             string pattern = @"([А-ЯЁ][а-яё]{1,}(?:-[А-ЯЁ][а-яё]{1,})?(?:ов|ова|ин|ина|ий|ая|ой))\s*[А-ЯЁ]\.\s*[А-ЯЁ]\.|[А-ЯЁ]\.\s*[А-ЯЁ]\.\s*([А-ЯЁ][а-яё]{1,}(?:-[А-ЯЁ][а-яё]{1,})?(?:ов|ова|ин|ина|ий|ая|ой))";
-            
+
             Regex regex = new Regex(pattern);
             MatchCollection matches = regex.Matches(inputText);
 
@@ -356,7 +356,7 @@ namespace ToC_Lab1
                     int positionInLine = match.Index;
                     int currentLength = 0;
 
-                    //Добавляем текст до совпадения
+                    // Добавляем текст до совпадения
                     HighlightedText.Inlines.Add(new Run(inputText.Substring(lastIndex, match.Index - lastIndex)));
 
                     // Добавляем совпадение с подсветкой
@@ -365,6 +365,9 @@ namespace ToC_Lab1
                         Background = Brushes.Yellow,
                         Foreground = Brushes.Black
                     });
+
+                    // Вычисляем позицию конца вхождения
+                    int endPosition = match.Index + match.Length;
 
                     for (int i = 0; i < lines.Length; i++)
                     {
@@ -375,14 +378,10 @@ namespace ToC_Lab1
                             break;
                         }
                         currentLength += lines[i].Length + 1; // +1 для учета символа новой строки
-
-                        
                     }
 
-                    
-
                     // Формируем строку результата
-                    string matchInfo = $"Найдено: {match.Value} (Строка: {lineNumber}, Позиция: {positionInLine})";
+                    string matchInfo = $"Найдено: {match.Value} (Строка: {lineNumber}, Позиция начала: {positionInLine}, Позиция конца: {endPosition})";
                     result.AppendLine(matchInfo);
 
                     // Выводим результат в ErrorOutput
