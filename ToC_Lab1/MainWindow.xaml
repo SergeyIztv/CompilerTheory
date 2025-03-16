@@ -159,19 +159,27 @@
                                  HorizontalAlignment="Left"
                                  TextAlignment="Right"
                                  IsReadOnly="True"/>
+                        <Grid>
+                            <!-- Поле для ввода текста -->
+                            <TextBox Width="Auto" 
+                                     Name="TextEditor" 
+                                     AcceptsReturn="True" 
+                                     AcceptsTab="True"
+                                     VerticalScrollBarVisibility="Auto" 
+                                     TextChanged="TextEditor_TextChanged"
+                                     HorizontalAlignment="Stretch"/>
 
-
-                        <!-- Поле для ввода текста -->
-                        <TextBox Width="Auto" 
-                                 Name="TextEditor" 
-                                 AcceptsReturn="True" 
-                                 AcceptsTab="True"
-                                 VerticalScrollBarVisibility="Auto" 
-                                 TextChanged="TextEditor_TextChanged"
-                                 HorizontalAlignment="Stretch"/>
-                        
+                            <!-- TextBlock для отображения текста с подсветкой -->
+                            <TextBlock Name="HighlightedText" 
+                                       Width="Auto" 
+                                       VerticalAlignment="Stretch"
+                                       HorizontalAlignment="Stretch"
+                                       TextWrapping="Wrap"
+                                       Visibility="Collapsed"
+                                       IsHitTestVisible="True"
+                                       MouseDown="HighlightedText_MouseDown"/>
+                        </Grid>
                     </DockPanel>
-                    
                 </ScrollViewer>
 
 

@@ -274,9 +274,21 @@ namespace ToC_Lab1
             }
         }
 
+        private void HighlightedText_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            // Передаем фокус на TextEditor
+            TextEditor.Focus();
+
+            // Вызываем метод TextEditor_TextChanged
+            TextEditor_TextChanged(sender, null);
+        }
+
         private void TextEditor_TextChanged(object sender, TextChangedEventArgs e)
         {
             UpdateLineNumbers();
+            TextEditor.Visibility = Visibility.Visible;
+            HighlightedText.Visibility = Visibility.Collapsed;
+            
         }
 
 
@@ -311,6 +323,57 @@ namespace ToC_Lab1
         }
 
         // Метод для поиска ФИО в тексте
+        //private void FindFIO(object sender, RoutedEventArgs e)
+        //{
+        //    // Получаем текст из TextEditor
+        //    string inputText = TextEditor.Text;
+
+        //    // Регулярное выражение для поиска ФИО (фамилия и инициалы)
+        //    string pattern = @"\b([А-ЯЁ][а-яё]{1,}(?:-[А-ЯЁ][а-яё]{1,})?(?:ов|ова|ин|ина|ий|ая|ой)\b)\s*[А-ЯЁ]\.\s*[А-ЯЁ]\.|\b[А-ЯЁ]\.\s*[А-ЯЁ]\.\s*([А-ЯЁ][а-яё]{1,}(?:-[А-ЯЁ][а-яё]{1,})?(?:ов|ова|ин|ина|ий|ая|ой))\b";
+
+        //    Regex regex = new Regex(pattern);
+        //    MatchCollection matches = regex.Matches(inputText);
+
+        //    // Очищаем ErrorOutput перед выводом новых данных
+        //    ErrorOutput.Clear();
+
+        //    // Если найдены совпадения, выводим их
+        //    if (matches.Count > 0)
+        //    {
+        //        // Создаем TextBlock для отображения текста с подсветкой
+        //        HighlightedText.Inlines.Clear();
+
+        //        int lastIndex = 0;
+        //        foreach (Match match in matches)
+        //        {
+        //            // Добавляем текст до совпадения
+        //            HighlightedText.Inlines.Add(new Run(inputText.Substring(lastIndex, match.Index - lastIndex)));
+
+        //            // Добавляем совпадение с подсветкой
+        //            HighlightedText.Inlines.Add(new Run(match.Value)
+        //            {
+        //                Background = Brushes.Yellow,
+        //                Foreground = Brushes.Black
+        //            });
+
+        //            lastIndex = match.Index + match.Length;
+        //        }
+
+        //        // Добавляем оставшийся текст
+        //        HighlightedText.Inlines.Add(new Run(inputText.Substring(lastIndex)));
+
+        //        // Показываем TextBlock с подсветкой
+        //        HighlightedText.Visibility = Visibility.Visible;
+        //        TextEditor.Visibility = Visibility.Collapsed;
+        //    }
+        //    else
+        //    {
+        //        // Если ничего не найдено, показываем сообщение
+        //        ErrorOutput.AppendText("Не найдено совпадений!" + Environment.NewLine);
+        //        HighlightedText.Visibility = Visibility.Collapsed;
+        //        TextEditor.Visibility = Visibility.Visible;
+        //    }
+        //}
         private void FindFIO(object sender, RoutedEventArgs e)
         {
             // Получаем текст из TextEditor
@@ -328,18 +391,32 @@ namespace ToC_Lab1
             // Если найдены совпадения, выводим их
             if (matches.Count > 0)
             {
+                // Создаем TextBlock для отображения текста с подсветкой
+                HighlightedText.Inlines.Clear();
+
                 // Разделяем текст на строки
                 string[] lines = inputText.Split('\n');
 
                 // Создаем StringBuilder для формирования результата
                 StringBuilder result = new StringBuilder();
 
+                int lastIndex = 0;
                 foreach (Match match in matches)
                 {
                     // Находим номер строки и позицию в строке
                     int lineNumber = 1;
                     int positionInLine = match.Index;
                     int currentLength = 0;
+
+                    //Добавляем текст до совпадения
+                    HighlightedText.Inlines.Add(new Run(inputText.Substring(lastIndex, match.Index - lastIndex)));
+
+                    // Добавляем совпадение с подсветкой
+                    HighlightedText.Inlines.Add(new Run(match.Value)
+                    {
+                        Background = Brushes.Yellow,
+                        Foreground = Brushes.Black
+                    });
 
                     for (int i = 0; i < lines.Length; i++)
                     {
@@ -350,7 +427,11 @@ namespace ToC_Lab1
                             break;
                         }
                         currentLength += lines[i].Length + 1; // +1 для учета символа новой строки
+
+                        
                     }
+
+                    
 
                     // Формируем строку результата
                     string matchInfo = $"Найдено: {match.Value} (Строка: {lineNumber}, Позиция: {positionInLine})";
@@ -358,7 +439,16 @@ namespace ToC_Lab1
 
                     // Выводим результат в ErrorOutput
                     ErrorOutput.AppendText(matchInfo + Environment.NewLine);
+
+                    lastIndex = match.Index + match.Length;
                 }
+
+                // Добавляем оставшийся текст
+                HighlightedText.Inlines.Add(new Run(inputText.Substring(lastIndex)));
+
+                // Показываем TextBlock с подсветкой
+                HighlightedText.Visibility = Visibility.Visible;
+                TextEditor.Visibility = Visibility.Collapsed;
 
                 // Предлагаем пользователю сохранить результат в файл
                 SaveFileDialog saveFileDialog = new SaveFileDialog
