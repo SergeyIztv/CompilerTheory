@@ -81,6 +81,7 @@
                     <MenuItem Header="Выделить все" Click="SelectAllText"/>
                 </MenuItem>
                 <MenuItem Header="Текст">
+                    <MenuItem Header="Регулярное выражение ЛР№2" Click="GetRegularExpression"/>
                     <MenuItem Header="Постановка задачи"/>
                     <MenuItem Header="Грамматика"/>
                     <MenuItem Header="Классификация грамматики"/>

@@ -23,6 +23,8 @@ namespace ToC_Lab1
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
+        // Регулярное выражение для поиска ФИО (фамилия и инициалы)
+        private string pattern = @"([А-ЯЁ][а-яё]{1,}(?:-[А-ЯЁ][а-яё]{1,})?(?:ов|ова|ин|ина|ий|ая|ой))\s*[А-ЯЁ]\.\s*[А-ЯЁ]\.|[А-ЯЁ]\.\s*[А-ЯЁ]\.\s*([А-ЯЁ][а-яё]{1,}(?:-[А-ЯЁ][а-яё]{1,})?(?:ов|ова|ин|ина|ий|ая|ой))";
         public UndoStack UndoStack
         {
             get => _undoStack;
@@ -238,7 +240,6 @@ namespace ToC_Lab1
             }
         }
 
-
         private void ShowHelp(object sender, RoutedEventArgs e)
         {
             
@@ -252,7 +253,6 @@ namespace ToC_Lab1
         {
             MessageBox.Show("Текстовый редактор на WPF\nРазработан для лабораторной работы.", "О программе");
         }
-
 
         private void MoveWindow(object sender, MouseButtonEventArgs e)
         {
@@ -291,7 +291,6 @@ namespace ToC_Lab1
             
         }
 
-
         private void UpdateLineNumbers()
         {
             // Получаем текст из RichTextBox
@@ -327,8 +326,7 @@ namespace ToC_Lab1
             // Получаем текст из TextEditor
             string inputText = TextEditor.Text;
 
-            // Регулярное выражение для поиска ФИО (фамилия и инициалы)
-            string pattern = @"([А-ЯЁ][а-яё]{1,}(?:-[А-ЯЁ][а-яё]{1,})?(?:ов|ова|ин|ина|ий|ая|ой))\s*[А-ЯЁ]\.\s*[А-ЯЁ]\.|[А-ЯЁ]\.\s*[А-ЯЁ]\.\s*([А-ЯЁ][а-яё]{1,}(?:-[А-ЯЁ][а-яё]{1,})?(?:ов|ова|ин|ина|ий|ая|ой))";
+            
 
             Regex regex = new Regex(pattern);
             MatchCollection matches = regex.Matches(inputText);
@@ -417,6 +415,11 @@ namespace ToC_Lab1
                 // Если ничего не найдено, показываем сообщение
                 ErrorOutput.AppendText("Не найдено совпадений!" + Environment.NewLine);
             }
+        }
+
+        private void GetRegularExpression(object sender, RoutedEventArgs e)
+        {
+            TextEditor.Text = pattern;
         }
 
         protected void OnPropertyChanged(string propertyName)
