@@ -92,7 +92,8 @@
                     <MenuItem Header="Исходный код программы"/>
                 </MenuItem>
                 <MenuItem Header="Пуск">
-                    <MenuItem Header="Поиск фамилии" Click="FindFIO"/>
+                    <MenuItem Header="Поиск фамилии РВ" Click="FindFIO_RegEx"/>
+                    <MenuItem Header="Поиск фамилии КА" Click="FindFIO_FiniteStateMachine"/>
                 </MenuItem>
                 <MenuItem Header="Справка">
                     <MenuItem Header="Вызов справки" Click="ShowHelp"/>
@@ -102,7 +103,7 @@
 
             <!-- Панель инструментов -->
             <ToolBar DockPanel.Dock="Top">
-                <Button Click="FindFIO" ToolTip="Пуск">
+                <Button Click="FindFIO_RegEx" ToolTip="Пуск">
                     <Image Source="/icons8-play-48.png" Width="20" Height="20"/>
                 </Button>
                 <Separator/>
@@ -183,9 +184,10 @@
                     </DockPanel>
                 </ScrollViewer>
 
-
-                <TextBox Name="ErrorOutput" IsReadOnly="True" Background="#EEE" Margin="0,1,0,0" Grid.Row="1" Grid.ColumnSpan="2" />
-            </Grid>
+                <Border BorderBrush="Black" BorderThickness="2" Grid.Row="1" Grid.ColumnSpan="2" >
+                    <TextBox Name="ErrorOutput" IsReadOnly="True" TextWrapping="Wrap" Background="#EEE" />
+                </Border>
+                </Grid>
         </DockPanel>
     </Grid>
 </Window>

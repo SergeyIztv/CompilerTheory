@@ -321,7 +321,7 @@ namespace ToC_Lab1
             ErrorOutput.Clear();
         }
 
-        private void FindFIO(object sender, RoutedEventArgs e)
+        private void FindFIO_RegEx(object sender, RoutedEventArgs e)
         {
             // Получаем текст из TextEditor
             string inputText = TextEditor.Text;
@@ -415,6 +415,38 @@ namespace ToC_Lab1
                 // Если ничего не найдено, показываем сообщение
                 ErrorOutput.AppendText("Не найдено совпадений!" + Environment.NewLine);
             }
+        }
+
+        private void FindFIO_FiniteStateMachine(object sender, RoutedEventArgs e)
+        {
+            // Получаем текст из TextEditor
+            string inputText = TextEditor.Text;
+            ErrorOutput.Clear(); // Очищаем вывод
+
+            // Создаем конечный автомат
+            var machine = new StateMachine();
+
+            // Обрабатываем текст посимвольно
+            for (int i = 0; i < inputText.Length; i++)
+            {
+                char currentChar = inputText[i];
+                machine.Transition(currentChar);
+
+                // Если достигнуто состояние ошибки, прерываем обработку
+                if (machine.CurrentState == "SE")
+                {
+                    break;
+                }
+            }
+
+            // Получаем результат обработки
+            bool isValid = machine.CurrentState == "S6"; // Успешное завершение
+            string status = isValid ? "КОРРЕКТНО" : "НЕКОРРЕКТНО";
+            string statesHistory = string.Join(" → ", machine.States);
+
+            // Выводим результат в ErrorOutput
+            ErrorOutput.AppendText($"Результат обработки: {status}\n");
+            ErrorOutput.AppendText($"Состояния КА: {statesHistory}\n");
         }
 
         private void GetRegularExpression(object sender, RoutedEventArgs e)
