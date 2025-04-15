@@ -2,7 +2,7 @@
 using System.Data;
 using System.Windows;
 
-namespace ToC_Lab1
+namespace CompilerTheory
 {
     /// <summary>
     /// Interaction logic for App.xaml

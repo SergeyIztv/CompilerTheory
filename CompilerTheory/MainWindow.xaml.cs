@@ -13,7 +13,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace ToC_Lab1
+namespace CompilerTheory
 {
     public partial class MainWindow : Window, INotifyPropertyChanged
     {
@@ -24,7 +24,7 @@ namespace ToC_Lab1
         public event PropertyChangedEventHandler? PropertyChanged;
 
         // Регулярное выражение для поиска ФИО (фамилия и инициалы)
-        private string pattern = @"([А-ЯЁ][а-яё]{1,}(?:-[А-ЯЁ][а-яё]{1,})?(?:ов|ова|ин|ина|ий|ая|ой))\s*[А-ЯЁ]\.\s*[А-ЯЁ]\.|[А-ЯЁ]\.\s*[А-ЯЁ]\.\s*([А-ЯЁ][а-яё]{1,}(?:-[А-ЯЁ][а-яё]{1,})?(?:ов|ова|ин|ина|ий|ая|ой))";
+        private string pattern = @"([А-ЯЁ][а-яё]{1,}(-[А-ЯЁ][а-яё]{1,})?(?:ов|ова|ин|ина|ий|ая|ой))\s*[А-ЯЁ]\.\s*[А-ЯЁ]\.|[А-ЯЁ]\.\s*[А-ЯЁ]\.\s*([А-ЯЁ][а-яё]{1,}(?:-[А-ЯЁ][а-яё]{1,})?(?:ов|ова|ин|ина|ий|ая|ой))";
         public UndoStack UndoStack
         {
             get => _undoStack;
@@ -322,100 +322,103 @@ namespace ToC_Lab1
         }
 
         private void FindFIO_RegEx(object sender, RoutedEventArgs e)
+{
+    // Получаем текст из TextEditor
+    string inputText = TextEditor.Text;
+
+     Regex regex = new Regex(pattern);
+    MatchCollection matches = regex.Matches(inputText);
+
+    // Очищаем ErrorOutput перед выводом новых данных
+    ErrorOutput.Clear();
+    HighlightedText.Inlines.Clear();
+
+    List<FoundFIO> foundFIOs = new List<FoundFIO>();
+
+    if (matches.Count > 0)
+    {
+        // Разделяем текст на строки
+        string[] lines = inputText.Split('\n');
+        StringBuilder result = new StringBuilder();
+        int lastIndex = 0;
+
+        foreach (Match match in matches)
         {
-            // Получаем текст из TextEditor
-            string inputText = TextEditor.Text;
+            if (!match.Success) continue;
 
-            
+            int position = match.Index;
+            int endPosition = match.Index + match.Length;
+            int lineNumber = 0;
+            int positionInLine = 0;
+            int currentLength = 0;
 
-            Regex regex = new Regex(pattern);
-            MatchCollection matches = regex.Matches(inputText);
-
-            // Очищаем ErrorOutput перед выводом новых данных
-            ErrorOutput.Clear();
-
-            // Если найдены совпадения, выводим их
-            if (matches.Count > 0)
+            // Вычисляем номер строки и позицию в строке
+            for (int i = 0; i < lines.Length; i++)
             {
-                // Создаем TextBlock для отображения текста с подсветкой
-                HighlightedText.Inlines.Clear();
-
-                // Разделяем текст на строки
-                string[] lines = inputText.Split('\n');
-
-                // Создаем StringBuilder для формирования результата
-                StringBuilder result = new StringBuilder();
-
-                int lastIndex = 0;
-                foreach (Match match in matches)
+                if (currentLength + lines[i].Length + 1 > match.Index)
                 {
-                    // Находим номер строки и позицию в строке
-                    int lineNumber = 1;
-                    int positionInLine = match.Index;
-                    int currentLength = 0;
-
-                    // Добавляем текст до совпадения
-                    HighlightedText.Inlines.Add(new Run(inputText.Substring(lastIndex, match.Index - lastIndex)));
-
-                    // Добавляем совпадение с подсветкой
-                    HighlightedText.Inlines.Add(new Run(match.Value)
-                    {
-                        Background = Brushes.Yellow,
-                        Foreground = Brushes.Black
-                    });
-
-                    // Вычисляем позицию конца вхождения
-                    int endPosition = match.Index + match.Length;
-
-                    for (int i = 0; i < lines.Length; i++)
-                    {
-                        if (currentLength + lines[i].Length + 1 > match.Index) // +1 для учета символа новой строки
-                        {
-                            lineNumber = i + 1;
-                            positionInLine = match.Index - currentLength;
-                            break;
-                        }
-                        currentLength += lines[i].Length + 1; // +1 для учета символа новой строки
-                    }
-
-                    // Формируем строку результата
-                    string matchInfo = $"Найдено: {match.Value} (Строка: {lineNumber}, Позиция начала: {positionInLine}, Позиция конца: {endPosition})";
-                    result.AppendLine(matchInfo);
-
-                    // Выводим результат в ErrorOutput
-                    ErrorOutput.AppendText(matchInfo + Environment.NewLine);
-
-                    lastIndex = match.Index + match.Length;
+                    lineNumber = i + 1;
+                    positionInLine = match.Index - currentLength;
+                    break;
                 }
-
-                // Добавляем оставшийся текст
-                HighlightedText.Inlines.Add(new Run(inputText.Substring(lastIndex)));
-
-                // Показываем TextBlock с подсветкой
-                HighlightedText.Visibility = Visibility.Visible;
-                TextEditor.Visibility = Visibility.Collapsed;
-
-                // Предлагаем пользователю сохранить результат в файл
-                SaveFileDialog saveFileDialog = new SaveFileDialog
-                {
-                    Filter = "Text Files (*.txt)|*.txt",
-                    DefaultExt = ".txt",
-                    Title = "Сохранить результаты поиска"
-                };
-
-                if (saveFileDialog.ShowDialog() == true)
-                {
-                    // Сохраняем результат в файл
-                    File.WriteAllText(saveFileDialog.FileName, result.ToString());
-                    MessageBox.Show("Результаты поиска успешно сохранены!", "Сохранение", MessageBoxButton.OK, MessageBoxImage.Information);
-                }
+                currentLength += lines[i].Length + 1;
             }
-            else
+
+            // Сохраняем данные в список
+            foundFIOs.Add(new FoundFIO(match.Value, positionInLine, lineNumber, endPosition));
+
+            // Подсветка найденного текста
+            HighlightedText.Inlines.Add(new Run(inputText.Substring(lastIndex, match.Index - lastIndex)));
+
+            HighlightedText.Inlines.Add(new Run(match.Value)
             {
-                // Если ничего не найдено, показываем сообщение
-                ErrorOutput.AppendText("Не найдено совпадений!" + Environment.NewLine);
-            }
+                Background = Brushes.Yellow,
+                Foreground = Brushes.Black
+            });
+
+            lastIndex = match.Index + match.Length;
+
+            // Формируем строку результата
+            string matchInfo = $"Найдено: {match.Value} (Строка: {lineNumber}, Позиция начала: {positionInLine}, Позиция конца: {endPosition})";
+            result.AppendLine(matchInfo);
+
+            // Выводим результат в ErrorOutput
+            ErrorOutput.AppendText(matchInfo + Environment.NewLine);
         }
+
+        // Добавляем оставшийся текст
+        HighlightedText.Inlines.Add(new Run(inputText.Substring(lastIndex)));
+
+        // Показываем TextBlock с подсветкой
+        HighlightedText.Visibility = Visibility.Visible;
+        TextEditor.Visibility = Visibility.Collapsed;
+
+        // Предлагаем пользователю сохранить результат в файл
+        SaveFileDialog saveFileDialog = new SaveFileDialog
+        {
+            Filter = "Text Files (*.txt)|*.txt",
+            DefaultExt = ".txt",
+            Title = "Сохранить результаты поиска"
+        };
+
+        if (saveFileDialog.ShowDialog() == true)
+        {
+            File.WriteAllText(saveFileDialog.FileName, result.ToString());
+            MessageBox.Show("Результаты поиска успешно сохранены!", "Сохранение", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+        }
+        else
+        {
+            ErrorOutput.AppendText("Не найдено совпадений!" + Environment.NewLine);
+        }
+
+        // Выводим список найденных данных в консоль (для теста)
+        foreach (var fio in foundFIOs)
+        {
+            Console.WriteLine(fio);
+        }
+    }
+
 
         private void FindFIO_FiniteStateMachine(object sender, RoutedEventArgs e)
         {
@@ -496,6 +499,28 @@ namespace ToC_Lab1
         }
     }
 
+    public class FoundFIO
+    {
+        public string FIO { get; set; } // Найденная строка (ФИО)
+        public int Position { get; set; } // Позиция в тексте
+        public int LineNumber { get; set; } // Номер строки в файле
+        public int EndPosition { get; set; } // Позиция конца вхождения
+
+        public FoundFIO(string fio, int position, int lineNumber, int endPosition)
+        {
+            FIO = fio;
+            Position = position;
+            LineNumber = lineNumber;
+            EndPosition = endPosition;
+        }
+
+        public override string ToString()
+        {
+            return $"ФИО: {FIO}, Строка: {LineNumber}, Начало: {Position}, Конец: {EndPosition}";
+        }
+    }
+
+    
     public class RedoStack : INotifyPropertyChanged
     {
         private readonly Stack<string> _stack = new Stack<string>();

@@ -1,9 +1,9 @@
-﻿<Window x:Class="ToC_Lab1.MainWindow"
+﻿<Window x:Class="CompilerTheory.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:ToC_Lab1"
+        xmlns:local="clr-namespace:CompilerTheory"
         mc:Ignorable="d"
         WindowStyle="None"
         Title="Compiler" Height="450" Width="470" WindowStartupLocation="CenterScreen">

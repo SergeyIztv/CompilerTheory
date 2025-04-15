@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ToC_Lab1
+namespace CompilerTheory
 {
     public class StateMachine
     {

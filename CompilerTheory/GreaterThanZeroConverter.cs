@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Data;
 
-namespace ToC_Lab1
+namespace CompilerTheory
 {
     public class GreaterThanZeroConverter : IValueConverter
     {
