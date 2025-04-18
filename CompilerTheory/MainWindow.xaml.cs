@@ -12,6 +12,8 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using CompilerTheory.processor;
+using CompilerTheory.utility;
 
 namespace CompilerTheory
 {
@@ -418,8 +420,52 @@ namespace CompilerTheory
             Console.WriteLine(fio);
         }
     }
+        
+        private void ParseText(object sender, RoutedEventArgs routedEventArgs)
+        {
+            // Получаем текст из TextEditor
+            string inputText = TextEditor.Text;
+            ErrorOutput.Clear(); // Очищаем вывод
+            var processor = new CppProcessor();
+            
+            var errors = processor.Process(inputText);
+            
+            if (errors.Count == 0)
+            {
+                ErrorOutput.Text = "Ошибки отсутствуют!";
+                return;
+            }
 
+            StringBuilder sb = new StringBuilder();
+            foreach (var error in errors)
+            {
+                
+                // Определяем позицию в тексте
+                int lineNumber = 1;
+                int currentIndex = 0;
+                int lastNewLineIndex = -1;
 
+                while (currentIndex < error.Position && currentIndex < inputText.Length)
+                {
+                    if (inputText[currentIndex] == '\n')
+                    {
+                        lineNumber++;
+                        lastNewLineIndex = currentIndex;
+                    }
+                    currentIndex++;
+                }
+
+                int linePosition = error.Position - lastNewLineIndex - 1;
+
+                // Формируем сообщение
+                string foundInfo = $"Обнаружено: {error.FoundTokenValue}";
+                if (!string.IsNullOrEmpty(error.FoundTokenValue))
+                    foundInfo = $"Обнаружено: '{error.FoundTokenValue}' ";
+
+                sb.AppendLine($"Строка {lineNumber}, позиция {linePosition}: {error.Message}{foundInfo}");
+            }
+            ErrorOutput.Text = sb.ToString();
+        }
         private void FindFIO_FiniteStateMachine(object sender, RoutedEventArgs e)
         {
             // Получаем текст из TextEditor
